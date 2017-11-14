@@ -1,6 +1,7 @@
 import { Component, OnInit, ViewEncapsulation, ElementRef ,ViewChild, NgModule, ApplicationRef, ChangeDetectorRef, ComponentFactoryResolver, ComponentRef, Injector, NgZone, EventEmitter, Input} from '@angular/core';
 import {} from '@types/leaflet';
 declare var L : any;
+
 @Component({
   selector: 'app-geojson-layer',
   templateUrl: './geojson-layer.component.html',
@@ -9,6 +10,7 @@ declare var L : any;
 })
 export class GeojsonLayerComponent implements OnInit {
 map:any;
+
 
 @Input()
 zoom:number=3;
@@ -26,5 +28,7 @@ L.tileLayer('http://{s}.tile.cloudmade.com/e7b61e61295a44a5b319ca0bd3150890/997/
 
 	
 }
+
+
 
 }
