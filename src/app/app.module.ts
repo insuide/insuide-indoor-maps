@@ -3,11 +3,13 @@ import { NgModule } from '@angular/core';
 
 
 import { AppComponent } from './app.component';
+import { GeojsonLayerComponent } from './geojson-leaflet/geojson-layer/geojson-layer.component';
 
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
+    GeojsonLayerComponent
   ],
   imports: [
     BrowserModule
