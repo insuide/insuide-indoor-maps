@@ -2,3 +2,10 @@
 
 /*.marker-blk { position: absolute; top:50px; padding: 20px; background-color: red;}*/
 
+.leaflet-draw-toolbar .leaflet-draw-draw-water {
+    background-position: -62px -2px;
+}
+
+.leaflet-touch .leaflet-draw-toolbar .leaflet-draw-draw-water {
+    background-position: -60px -1px;
+}
