@@ -98,6 +98,7 @@ drawnItems:any;
 polyline:any;
 
 markers:any[]=[];
+polyIndexMap:any={};
 @ViewChild('map') el:ElementRef;
 
   constructor() {}
@@ -130,12 +131,12 @@ listenPolyLineClick(){
   this.polyline.on('click',e=>{
       L.DomEvent.stopPropagation(e);
       console.log("Poly line clicked");
-      console.log(e);
+      
   })
 }
 
 initiateDrawing(){
-
+  this.polyIndexMap = {};
   this.map.on('click', (e)=> {
       var marker = this.addMarkerAndDraw(e);
   });
@@ -158,24 +159,41 @@ addMarkerAndDraw(e){
     
     var subIndex = this.polyline.getLatLngs().length;
     
-
+    //add latlng to end of the polyline and redraw polyline
     this.polyline.addLatLng(marker.getLatLng())
-    //this.polyline.getLatLngs().splice(this.subIndex, 0, marker.getLatLng());
     
     marker._polylineIndex = subIndex;
     this.polyline.redraw();
     let self = this;
     marker.on('dragend', function(e) {
-        console.log(this._polylineIndex)
+        //change position of current marker and redraw polyline
         self.polyline.getLatLngs().splice(this._polylineIndex, 1, this.getLatLng());
+        
+        //change positions of markers where markers were clicked to add a polyline
+        if(self.polyIndexMap[this._polylineIndex]){
+          self.polyIndexMap[this._polylineIndex].forEach(index=>{
+              self.polyline.getLatLngs().splice(index, 1, this.getLatLng());
+          })
+        }
+
         // Redraw polyline!
         self.polyline.redraw();
     })
 
-    marker.on('click',(e)=>{
+    marker.on('click',function(e){
+      //disable propogation of click to map so that marker click can also be accounted into adding a polyline
       L.DomEvent.stopPropagation(e);
-      this.polyline.addLatLng(marker.getLatLng());
-      this.polyline.redraw();
+      var length = self.polyline.getLatLngs().length;
+
+      //create a check list for duplicates so that thier positions can also be changed in polylines
+      if(!self.polyIndexMap[this._polylineIndex]){
+        self.polyIndexMap[this._polylineIndex] = [length];
+      }else{
+        self.polyIndexMap[this._polylineIndex] = self.polyIndexMap[this._polylineIndex].push(length);
+      }
+      
+      self.polyline.addLatLng(this.getLatLng());
+      self.polyline.redraw();
     })
     return marker;
 }
