@@ -95,9 +95,9 @@ center:number[]= [47.4330331,19.261177];
 
 drawnItems:any;		
 		
+polyline:any;
 
-
-
+markers:any[]=[];
 @ViewChild('map') el:ElementRef;
 
   constructor() {}
@@ -112,15 +112,74 @@ drawnItems:any;
          attribution: 'Insuide Tiles from mapwarper'
      }).addTo(this.map);
   
+    this.polyline = L.polyline([], {
+      color: 'red',
+      clickable: 'true'
+    }).addTo(this.map);
 
-      
-
+    this.initiateDrawing();
+    this.listenPolyLineClick();
 
 
 
 
 
 }
+
+listenPolyLineClick(){
+  this.polyline.on('click',e=>{
+      L.DomEvent.stopPropagation(e);
+      console.log("Poly line clicked");
+      console.log(e);
+  })
+}
+
+initiateDrawing(){
+
+  this.map.on('click', (e)=> {
+      var marker = this.addMarkerAndDraw(e);
+  });
+
+}
+
+addMarkerAndDraw(e){
+
+    console.log("adding");
+    var markerIcon = L.icon({
+            iconUrl: '/assets/waypoints_marker.png',
+            
+    });
+    var marker = new L.Marker(e.latlng,{
+          clickable: true,
+          draggable: true
+    });
+    this.map.addLayer(marker);
+    this.markers.push(marker);
+    
+    var subIndex = this.polyline.getLatLngs().length;
+    
+
+    this.polyline.addLatLng(marker.getLatLng())
+    //this.polyline.getLatLngs().splice(this.subIndex, 0, marker.getLatLng());
+    
+    marker._polylineIndex = subIndex;
+    this.polyline.redraw();
+    let self = this;
+    marker.on('dragend', function(e) {
+        console.log(this._polylineIndex)
+        self.polyline.getLatLngs().splice(this._polylineIndex, 1, this.getLatLng());
+        // Redraw polyline!
+        self.polyline.redraw();
+    })
+
+    marker.on('click',(e)=>{
+      L.DomEvent.stopPropagation(e);
+      this.polyline.addLatLng(marker.getLatLng());
+      this.polyline.redraw();
+    })
+    return marker;
+}
+  
 
 
 
