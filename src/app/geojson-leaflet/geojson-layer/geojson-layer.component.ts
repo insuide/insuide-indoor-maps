@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewEncapsulation, ElementRef ,ViewChild, NgModule, ApplicationRef, ChangeDetectorRef, ComponentFactoryResolver, ComponentRef, Injector, NgZone, EventEmitter, Input} from '@angular/core';
+import { Component, OnInit, ViewEncapsulation, ElementRef ,ViewChild, HostListener,NgModule, ApplicationRef, ChangeDetectorRef, ComponentFactoryResolver, ComponentRef, Injector, NgZone, EventEmitter, Input} from '@angular/core';
 import {} from '@types/leaflet';
 import { layerStyles } from '../layerStyles';
 import { geojson } from '../geojson';
@@ -99,15 +99,26 @@ polyline:any;
 
 markers:any[]=[];
 polyIndexMap:any={};
+drawPolyLine:any;
+
+
+// @HostListener('mousemove', ['$event'])
+//     onMousemove(event: MouseEvent) {
+        
+//               console.log(event.clientX); 
+//               console.log(event.clientY); 
+           
+//     }
+   
 @ViewChild('map') el:ElementRef;
 
   constructor() {}
 
   ngOnInit(){
   	
-  	
+    
    this.map = L.map('map').setView(this.center, this.zoom);
-
+   
    L.tileLayer(this.tilesUrl, {
          minZoom: this.minZoom, maxZoom: this.maxZoom,
          attribution: 'Insuide Tiles from mapwarper'
@@ -118,14 +129,28 @@ polyIndexMap:any={};
       clickable: 'true'
     }).addTo(this.map);
 
+    this.drawPolyLine = L.polyline([], {
+      color: 'blue',
+      clickable: 'true'
+    }).addTo(this.map);
+
     this.initiateDrawing();
     this.listenPolyLineClick();
 
-
+    this.map.on('mousemove',(e)=>{
+      if(this.drawPolyLine.getLatLngs().length > 0){
+        console.log(e.latlng);
+        this.drawPolyLine.getLatLngs().splice(1, 1, e.latlng);
+        this.drawPolyLine.redraw();
+      }
+    })
 
 
 
 }
+
+
+
 
 listenPolyLineClick(){
   this.polyline.on('click',e=>{
@@ -161,7 +186,13 @@ addMarkerAndDraw(e){
     
     //add latlng to end of the polyline and redraw polyline
     this.polyline.addLatLng(marker.getLatLng())
+    if(this.drawPolyLine.getLatLngs().length > 1){
+        this.drawPolyLine.getLatLngs().splice(0, 2);
+    }
+
+    this.drawPolyLine.addLatLng(marker.getLatLng())
     
+    this.drawPolyLine.redraw();
     marker._polylineIndex = subIndex;
     this.polyline.redraw();
     let self = this;
@@ -194,6 +225,14 @@ addMarkerAndDraw(e){
       
       self.polyline.addLatLng(this.getLatLng());
       self.polyline.redraw();
+
+      if(self.drawPolyLine.getLatLngs().length > 1){
+        self.drawPolyLine.getLatLngs().splice(0, 2);
+      }
+      self.drawPolyLine.addLatLng(this.getLatLng());
+      
+      self.drawPolyLine.redraw();
+
     })
     return marker;
 }
