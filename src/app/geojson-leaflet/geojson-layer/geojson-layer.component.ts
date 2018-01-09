@@ -191,9 +191,9 @@ addMarkerAndDraw(e){
     
     //add latlng to end of the polyline and redraw polyline
     this.polyline.addLatLng(marker.getLatLng())
-    if(this.drawPolyLine.getLatLngs().length > 1){
-        this.drawPolyLine.getLatLngs().splice(0, 2);
-    }
+    
+    this.drawPolyLine.getLatLngs().splice(0, 2);
+    
 
     this.drawPolyLine.addLatLng(marker.getLatLng())
     
@@ -231,9 +231,9 @@ addMarkerAndDraw(e){
       self.polyline.addLatLng(this.getLatLng());
       self.polyline.redraw();
 
-      if(self.drawPolyLine.getLatLngs().length > 1){
-        self.drawPolyLine.getLatLngs().splice(0, 2);
-      }
+      
+      self.drawPolyLine.getLatLngs().splice(0, 2);
+      
       self.drawPolyLine.addLatLng(this.getLatLng());
       
       self.drawPolyLine.redraw();
