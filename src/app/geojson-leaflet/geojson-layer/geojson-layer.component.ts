@@ -44,7 +44,7 @@ aurora:any;
 golden:any;
 features:any[];
 slices:any[];
-
+edited: boolean;
 
 
 
@@ -89,6 +89,8 @@ vectortileOptions:any={
 @Input()
 tilesUrl:string="http://mapwarper.net/maps/tile/21937/{z}/{x}/{y}.png"
 
+@Input()
+PulseRays:boolean;
 
 @Input()
 center:number[]= [47.4330331,19.261177];
@@ -114,7 +116,7 @@ polyIndexMap:any={};
      }).addTo(this.map);
   
     this.polyline = L.polyline([], {
-      color: 'red',
+      color: '#BB6BD9',
       clickable: 'true'
     }).addTo(this.map);
 
@@ -156,6 +158,9 @@ addMarkerAndDraw(e){
     });
     this.map.addLayer(marker);
     this.markers.push(marker);
+
+
+
     
     var subIndex = this.polyline.getLatLngs().length;
     
@@ -200,8 +205,18 @@ addMarkerAndDraw(e){
   
 
 
+showSelected(item) {
+        this.edited = !this.edited;
+    }
 
-
+letClass(){
+   console.log(this.PulseRays);
+  // if(this.PulseRays){
+//return 'pulse_marker'
+ //  }else{
+   // return 'pulse_marker_2'
+  //}
+}
 
 
 
