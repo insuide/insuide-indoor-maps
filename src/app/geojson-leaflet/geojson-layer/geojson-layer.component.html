@@ -2,11 +2,19 @@
 
  <div class="toolbar">
  
- 	<button class="first-btn" (click)="showSelected()">         
+ 	<!--<button class="first-btn" (click)="showSelected()">         
  		<span *ngIf="!edited"><img src="assets/poi_icon.png">hide</span>
-        <span *ngIf="edited"  [ngClass]=letClass()><img src="assets/profile_icon.png">show</span>
+        <span *ngIf="edited"  [ngClass]=getClass()><img src="assets/profile_icon.png">show</span>
 </button>
  	<button class="second-btn">Clear Last point</button>
- 	<button class="third-btn">Done Editing</button>
+ 	<button class="third-btn">Done Editing</button>-->
+
+
+ 	<button class="first-btn" (click)="showSelected()">         
+ 		<span *ngIf="!edited"><i class="mdi mdi-pencil mdi-24px"></i></span>
+        <span *ngIf="edited"  [ngClass]=getClass()><i class="mdi mdi-pencil-off mdi-24px"></i></span>
+    </button>
+ 	<button class="second-btn"><i class="mdi mdi-delete mdi-24px"></i></button>
+ 	<button class="third-btn"><i class="mdi mdi-pencil-lock mdi-24px"></i></button>
  </div>
 

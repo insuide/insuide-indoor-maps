@@ -90,7 +90,7 @@ vectortileOptions:any={
 tilesUrl:string="http://mapwarper.net/maps/tile/21937/{z}/{x}/{y}.png"
 
 @Input()
-PulseRays:boolean;
+MouseEffect:boolean;
 
 @Input()
 center:number[]= [47.4330331,19.261177];
@@ -133,6 +133,8 @@ drawPolyLine:any;
 
     this.drawPolyLine = L.polyline([], {
       color: 'blue',
+      dashArray: '20,15',
+      opacity:.7,
       clickable: 'true'
     }).addTo(this.map);
 
@@ -248,14 +250,16 @@ showSelected(item) {
         this.edited = !this.edited;
     }
 
-letClass(){
-   console.log(this.PulseRays);
-  // if(this.PulseRays){
-//return 'pulse_marker'
- //  }else{
-   // return 'pulse_marker_2'
-  //}
-}
+getCSSClasses() {
+    console.log("12345")
+       if(!this.edited) {  
+           return "effectOne"
+ }
+
+return "effectTwo"
+
+
+} 
 
 
 
