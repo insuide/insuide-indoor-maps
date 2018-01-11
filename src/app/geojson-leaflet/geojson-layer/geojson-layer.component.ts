@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewEncapsulation, ElementRef ,ViewChild, HostListener,NgModule, ApplicationRef, ChangeDetectorRef, ComponentFactoryResolver, ComponentRef, Injector, NgZone, EventEmitter, Input} from '@angular/core';
+import { Component, OnInit, ViewEncapsulation, ElementRef ,ViewChild, HostListener,NgModule, ApplicationRef, ChangeDetectorRef, ComponentFactoryResolver, ComponentRef, Injector, NgZone, EventEmitter, Input , Output} from '@angular/core';
 import {} from '@types/leaflet';
 import { layerStyles } from '../layerStyles';
 import { geojson } from '../geojson';
@@ -28,7 +28,7 @@ lng:any;
 myURL:any;
 
 
-editing: boolean;
+editing: boolean=true;
 removing: boolean;
 airportLayerAdded: boolean;
 markerCount: number;
@@ -44,7 +44,7 @@ aurora:any;
 golden:any;
 features:any[];
 slices:any[];
-edited: boolean;
+
 
 
 
@@ -95,6 +95,12 @@ MouseEffect:boolean;
 @Input()
 center:number[]= [47.4330331,19.261177];
 
+@Output()
+polylineclicked:EventEmitter<any> = new EventEmitter<any>(); 
+
+@Output()
+onsave:EventEmitter<any>          = new EventEmitter<any>(); 
+
 drawnItems:any;		
 		
 polyline:any;
@@ -142,8 +148,8 @@ drawPolyLine:any;
     this.listenPolyLineClick();
 
     this.map.on('mousemove',(e)=>{
-      if(this.drawPolyLine.getLatLngs().length > 0){
-        console.log(e.latlng);
+      if(this.drawPolyLine.getLatLngs().length > 0 && this.editing){
+        //console.log(e.latlng);
         this.drawPolyLine.getLatLngs().splice(1, 1, e.latlng);
         this.drawPolyLine.redraw();
       }
@@ -159,7 +165,7 @@ drawPolyLine:any;
 listenPolyLineClick(){
   this.polyline.on('click',e=>{
       L.DomEvent.stopPropagation(e);
-      console.log("Poly line clicked");
+      this.polylineclicked.emit(this.polyline);
       
   })
 }
@@ -173,7 +179,9 @@ initiateDrawing(){
 }
 
 addMarkerAndDraw(e){
-
+    if(!this.editing){
+      return
+    }
     console.log("adding");
     var markerIcon = L.icon({
             iconUrl: '/assets/waypoints_marker.png',
@@ -220,6 +228,9 @@ addMarkerAndDraw(e){
     })
 
     marker.on('click',function(e){
+      if(!self.editing){
+          return
+      }
       //disable propogation of click to map so that marker click can also be accounted into adding a polyline
       L.DomEvent.stopPropagation(e);
       var length = self.polyline.getLatLngs().length;
@@ -247,13 +258,17 @@ addMarkerAndDraw(e){
   
 
 
-showSelected(item) {
-        this.edited = !this.edited;
-    }
+changeEditMode() {
+        this.editing = !this.editing;
+        if(!this.editing){
+          this.drawPolyLine.getLatLngs().splice(0, 2);
+          this.drawPolyLine.redraw();
+        }
+}
 
 getCSSClasses() {
     console.log("12345")
-       if(!this.edited) {  
+       if(!this.editing) {  
            return "effectOne"
  }
 
@@ -261,6 +276,53 @@ return "effectTwo"
 
 
 } 
+
+removeLastAdded(){
+  //Set new params for already drawn polyline and markers
+  var length    = this.polyline.getLatLngs().length
+  let latlng    = this.polyline.getLatLngs()[length-1]
+  this.polyline.getLatLngs().splice(length-1, 1);
+  this.polyline.redraw();
+  let marker;
+  
+  this.markers.forEach(mark=>{
+    
+    if(mark.getLatLng() == latlng){
+      marker = mark;
+
+    }
+  })
+
+  if(marker){
+    let _polylineIndex  = marker._polylineIndex;
+
+    if(!this.polyIndexMap[_polylineIndex] || this.polyIndexMap[_polylineIndex].length == 0){
+      this.markers.splice(this.markers.length-1,1);
+      if(marker){
+        this.map.removeLayer(marker);
+      }
+    }else{
+      let array    = this.polyIndexMap[_polylineIndex];
+      let index    =  array.indexOf(length)
+      array.splice(index,1);
+      this.polyIndexMap[_polylineIndex] = array;
+    }  
+  }
+  //Set draw polyline params
+   this.drawPolyLine.getLatLngs().splice(0, 2);
+   
+   if(this.polyline.getLatLngs().length > 0){
+     this.drawPolyLine.addLatLng(this.polyline.getLatLngs()[this.polyline.getLatLngs().length-1]);
+   }
+   this.drawPolyLine.redraw();
+}
+
+onSaveLine(){
+  this.onsave.emit(this.polyline);
+  this.editing = false;
+  this.drawPolyLine.getLatLngs().splice(0, 2);
+  this.drawPolyLine.redraw();
+}
 
 
 
