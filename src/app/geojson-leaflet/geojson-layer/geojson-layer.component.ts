@@ -181,7 +181,8 @@ addMarkerAndDraw(e){
     });
     var marker = new L.Marker(e.latlng,{
           clickable: true,
-          draggable: true
+          draggable: true,
+          icon: markerIcon
     });
     this.map.addLayer(marker);
     this.markers.push(marker);
