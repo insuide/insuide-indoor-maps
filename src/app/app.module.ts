@@ -1,18 +1,17 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
-
-
+import { GeojsonLeafletModule } from './geojson-leaflet/geojson-leaflet.module';
 import { AppComponent } from './app.component';
-import { GeojsonLayerComponent } from './geojson-leaflet/geojson-layer/geojson-layer.component';
+
 
 
 @NgModule({
   declarations: [
-    AppComponent,
-    GeojsonLayerComponent
+    AppComponent
   ],
   imports: [
-    BrowserModule
+    BrowserModule,
+    GeojsonLeafletModule
   ],
   providers: [],
   bootstrap: [AppComponent]

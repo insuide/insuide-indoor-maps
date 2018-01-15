@@ -185,12 +185,15 @@ addMarkerAndDraw(e){
     console.log("adding");
     var markerIcon = L.icon({
             iconUrl: '/assets/waypoints_marker.png',
+            iconSize: [12, 12], // size of the icon
+            iconAnchor: [6, 6], // point of the icon which will correspond to marker's location
             
     });
     var marker = new L.Marker(e.latlng,{
           clickable: true,
           draggable: true,
-          icon: markerIcon
+          icon: markerIcon,
+         
     });
     this.map.addLayer(marker);
     this.markers.push(marker);
