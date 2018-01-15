@@ -14,4 +14,7 @@ add this line into your head tag section of index.html
 
 <b> How to use </b> 
 
-Install the dependency with the command npm i --save @insuide/indoor-map-library
+Install the dependency with the command 
+```nodejs
+npm i --save-dev @insuide/indoor-map-library
+```
