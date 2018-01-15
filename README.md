@@ -11,3 +11,7 @@ add this line into your head tag section of index.html
 <link rel="stylesheet" href="//cdn.materialdesignicons.com/2.1.19/css/materialdesignicons.min.css">
 ```
 2) Copy all image files from https://github.com/h33na/insuide-indoor-maps/tree/master/src/assets folder to your assets folder
+
+<b> How to use </b> 
+
+Install the dependency with the command npm i --save @insuide/indoor-map-library
