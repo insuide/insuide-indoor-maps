@@ -2,7 +2,6 @@ import { Component, OnInit, ViewEncapsulation, ElementRef ,ViewChild, HostListen
 import {} from '@types/leaflet';
 import { layerStyles } from '../layerStyles';
 import { geojson } from '../geojson';
-//import { MarkerComponentComponent } from '../geojson-layer/marker-component/marker-component.component';
 
 
 
@@ -10,7 +9,6 @@ declare var L : any;
 declare var jQuery: any;
 declare var draw:any;
 declare var geojsonvt:any;
-// declare var tileIndex:any;
 
 
 @Component({
@@ -74,8 +72,7 @@ maxZoom:number=22;
 @Input()
 vectorTileStyling:any=layerStyles;
 
-// @Input()
-// vectortileUrl:string="http://{s}.tile.osm.org/{z}/{x}/{y}.png";
+
 
 @Input()
 vectortileOptions:any={
@@ -110,13 +107,6 @@ polyIndexMap:any={};
 drawPolyLine:any;
 
 
-// @HostListener('mousemove', ['$event'])
-//     onMousemove(event: MouseEvent) {
-        
-//               console.log(event.clientX); 
-//               console.log(event.clientY); 
-           
-//     }
    
 @ViewChild('map') el:ElementRef;
 
@@ -149,7 +139,6 @@ drawPolyLine:any;
 
     this.map.on('mousemove',(e)=>{
       if(this.drawPolyLine.getLatLngs().length > 0 && this.editing){
-        //console.log(e.latlng);
         this.drawPolyLine.getLatLngs().splice(1, 1, e.latlng);
         this.drawPolyLine.redraw();
       }
