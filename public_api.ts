@@ -1,1 +1,1 @@
-export * from './src/app/geojson-leaflet/geojson-leaflet.module';
+export * from './src/app/indoor-maps-tool/indoor-maps-tool.module';

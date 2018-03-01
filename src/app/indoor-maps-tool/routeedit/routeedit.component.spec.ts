@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { GeojsonLayerComponent } from './geojson-layer.component';
+import { RouteeditComponent } from './routeedit.component';
 
-describe('GeojsonLayerComponent', () => {
-  let component: GeojsonLayerComponent;
-  let fixture: ComponentFixture<GeojsonLayerComponent>;
+describe('RouteeditComponent', () => {
+  let component: RouteeditComponent;
+  let fixture: ComponentFixture<RouteeditComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ GeojsonLayerComponent ]
+      declarations: [ RouteeditComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(GeojsonLayerComponent);
+    fixture = TestBed.createComponent(RouteeditComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

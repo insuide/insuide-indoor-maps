@@ -1,4 +1,6 @@
-import { Component, OnInit, ViewEncapsulation, ElementRef ,ViewChild, HostListener,NgModule, ApplicationRef, ChangeDetectorRef, ComponentFactoryResolver, ComponentRef, Injector, NgZone, EventEmitter, Input , Output} from '@angular/core';
+import { Component, OnInit,Input,ElementRef,EventEmitter,ViewChild,Output } from '@angular/core';
+
+
 import {} from '@types/leaflet';
 import { layerStyles } from '../layerStyles';
 import { geojson } from '../geojson';
@@ -9,16 +11,14 @@ declare var L : any;
 declare var jQuery: any;
 declare var draw:any;
 declare var geojsonvt:any;
-
-
 @Component({
-  selector: 'app-geojson-layer',
-  templateUrl: './geojson-layer.component.html',
-  styleUrls: ['./geojson-layer.component.css'],
-  encapsulation: ViewEncapsulation.None
+  selector: 'insuide-routeedit',
+  templateUrl: './routeedit.component.html',
+  styleUrls: ['./routeedit.component.css']
 })
-export class GeojsonLayerComponent implements OnInit {
-map:any;
+export class RouteeditComponent implements OnInit {
+
+  map:any;
 data:any;
 layer:any;
 lat:any;
@@ -316,20 +316,4 @@ onSaveLine(){
   this.drawPolyLine.redraw();
 }
 
-
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -1,7 +1,7 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
-import { GeojsonLeafletModule } from './geojson-leaflet/geojson-leaflet.module';
 import { AppComponent } from './app.component';
+import { IndoorMapsToolModule } from './indoor-maps-tool/indoor-maps-tool.module';
 
 
 
@@ -11,7 +11,7 @@ import { AppComponent } from './app.component';
   ],
   imports: [
     BrowserModule,
-    GeojsonLeafletModule
+    IndoorMapsToolModule
   ],
   providers: [],
   bootstrap: [AppComponent]
