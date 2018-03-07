@@ -4,7 +4,7 @@ import { Component, OnInit,Input,ElementRef,EventEmitter,ViewChild,Output } from
 import {} from '@types/leaflet';
 import { layerStyles } from '../layerStyles';
 import { geojson } from '../geojson';
-
+import { UUID } from 'angular2-uuid';
 
 
 declare var L : any;
@@ -107,6 +107,14 @@ polyIndexMap:any={};
 drawPolyLine:any;
 
 
+@Input()
+savedRoutes:any[]=[];
+
+@Input()
+savedMap:any={};
+
+
+
    
 @ViewChild('map') el:ElementRef;
 
@@ -135,7 +143,7 @@ drawPolyLine:any;
     }).addTo(this.map);
 
     this.initiateDrawing();
-    this.listenPolyLineClick();
+    //this.listenPolyLineClick();
 
     this.map.on('mousemove',(e)=>{
       if(this.drawPolyLine.getLatLngs().length > 0 && this.editing){
@@ -147,6 +155,8 @@ drawPolyLine:any;
 
 
 }
+
+
 
 
 
@@ -167,9 +177,14 @@ initiateDrawing(){
 
 }
 
+
+
 addMarkerAndDraw(e){
     if(!this.editing){
-      return
+      var length    = this.polyline.getLatLngs().length;
+      this.polyline.splice(0,length-1);
+      this.drawPolyLine.splice(0,2);
+      this.editing = false;
     }
     console.log("adding");
     var markerIcon = L.icon({
@@ -184,6 +199,7 @@ addMarkerAndDraw(e){
           icon: markerIcon,
          
     });
+    marker.draw_id = UUID.UUID();
     this.map.addLayer(marker);
     this.markers.push(marker);
 
