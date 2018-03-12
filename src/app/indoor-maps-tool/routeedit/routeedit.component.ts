@@ -1,5 +1,5 @@
 import { Component, OnInit,Input,ElementRef,EventEmitter,ViewChild,Output } from '@angular/core';
-
+import { ErrorObservable } from 'rxjs/observable/ErrorObservable';
 
 import {} from '@types/leaflet';
 import { layerStyles } from '../layerStyles';
@@ -18,41 +18,25 @@ declare var geojsonvt:any;
 })
 export class RouteeditComponent implements OnInit {
 
-  map:any;
-data:any;
-layer:any;
-lat:any;
-lng:any;
-myURL:any;
+map:any;
 
-
-editing: boolean=true;
-removing: boolean;
-airportLayerAdded: boolean;
-markerCount: number;
-
-
-mapboxUrl:any;
-
-mapboxAttribution:any;
-
-littleton:any;
-denver:any;
-aurora:any;
-golden:any;
-features:any[];
-slices:any[];
 
 
 
 
-x:any=0;
-y:any=0;
-z:any=1;
+editing: boolean=true;
 
 
-@Input()
-indexMaxZoom:number=5;
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -86,17 +70,27 @@ vectortileOptions:any={
 @Input()
 tilesUrl:string="http://mapwarper.net/maps/tile/21937/{z}/{x}/{y}.png"
 
-@Input()
-MouseEffect:boolean;
 
 @Input()
 center:number[]= [47.4330331,19.261177];
 
-@Output()
-polylineclicked:EventEmitter<any> = new EventEmitter<any>(); 
+
 
 @Output()
-onsave:EventEmitter<any>          = new EventEmitter<any>(); 
+onmarkerchanged:EventEmitter<any>  = new EventEmitter<any>();
+@Output()
+onroutechanged:EventEmitter<any>           = new EventEmitter<any>(); 
+@Output()
+onmarkerdeleted:EventEmitter<any>          = new EventEmitter<any>(); 
+@Output()
+onroutedeleted:EventEmitter<any>           = new EventEmitter<any>();
+@Output()
+onmarkeradded:EventEmitter<any>            = new EventEmitter<any>();
+@Output()
+onrouteadded:EventEmitter<any>             = new EventEmitter<any>();
+
+
+
 
 drawnItems:any;		
 		
@@ -105,13 +99,26 @@ polyline:any;
 markers:any[]=[];
 polyIndexMap:any={};
 drawPolyLine:any;
+polyLineMap:any={};
+draggedKey:string;
+existingMarkersMap:any={};
 
 
+
+
+
+savedPolylines:any[]=[];
 @Input()
-savedRoutes:any[]=[];
-
+existingMarkers:any[] =[];
 @Input()
-savedMap:any={};
+existingRoutes:any[]=[];
+
+
+
+
+routeMarkerMap:any[] = [];
+
+polyLines = [];
 
 
 
@@ -142,6 +149,7 @@ savedMap:any={};
       clickable: 'true'
     }).addTo(this.map);
 
+
     this.initiateDrawing();
     //this.listenPolyLineClick();
 
@@ -161,13 +169,13 @@ savedMap:any={};
 
 
 
-listenPolyLineClick(){
-  this.polyline.on('click',e=>{
-      L.DomEvent.stopPropagation(e);
-      this.polylineclicked.emit(this.polyline);
+// listenPolyLineClick(){
+//   this.polyline.on('click',e=>{
+//       L.DomEvent.stopPropagation(e);
+//       this.polylineclicked.emit(this.polyline);
       
-  })
-}
+//   })
+// }
 
 initiateDrawing(){
   this.polyIndexMap = {};
@@ -181,25 +189,35 @@ initiateDrawing(){
 
 addMarkerAndDraw(e){
     if(!this.editing){
-      var length    = this.polyline.getLatLngs().length;
-      this.polyline.splice(0,length-1);
-      this.drawPolyLine.splice(0,2);
-      this.editing = false;
+      // var length    = this.polyline.getLatLngs().length;
+      // this.polyline.splice(0,length-1);
+      // this.drawPolyLine.splice(0,2);
+      //this.editing = false;
+      return;
     }
-    console.log("adding");
-    var markerIcon = L.icon({
-            iconUrl: '/assets/waypoints_marker.png',
-            iconSize: [12, 12], // size of the icon
-            iconAnchor: [6, 6], // point of the icon which will correspond to marker's location
+    
+    // var markerIcon = L.icon({
+    //         iconUrl: '/assets/waypoints_marker.png',
+    //         iconSize: [12, 12], // size of the icon
+    //         iconAnchor: [6, 6], // point of the icon which will correspond to marker's location
             
-    });
+    // });
+    var name = "pending "+this.polyline.getLatLngs().length;
+    var markerIcon = new L.DivIcon({
+        className: 'my-div-icon',
+        html: '<img class="my-div-image" src="/assets/waypoints_marker.png"'+
+              '<span class="my-div-span">'+name+'</span>'
+    })
+
+    
     var marker = new L.Marker(e.latlng,{
           clickable: true,
           draggable: true,
           icon: markerIcon,
          
     });
-    marker.draw_id = UUID.UUID();
+    marker.marker_id = UUID.UUID();
+    marker.name      = name;
     this.map.addLayer(marker);
     this.markers.push(marker);
 
@@ -261,6 +279,20 @@ addMarkerAndDraw(e){
       self.drawPolyLine.redraw();
 
     })
+    // let map_copy = this.map
+    // marker.on('contextmenu', function(e) {
+    //   L.DomEvent.stopPropagation(e);
+    //   var tdiv='Delete ? '+marker.marker_id;
+    //   var tpopup = L.popup({closeButton:true})
+    //                 .setLatLng(e.latlng)
+    //                 .setContent(tdiv)
+    //                 .openOn(map_copy);
+    //   tpopup._wrapper.addEventListener('click', ()=>{
+    //      //console.log("delete");
+    //      map_copy.removeLayer(marker);
+    //     map_copy.closePopup();
+    //   });
+    // });
     return marker;
 }
   
@@ -275,7 +307,7 @@ changeEditMode() {
 }
 
 getCSSClasses() {
-    console.log("12345")
+    
        if(!this.editing) {  
            return "effectOne"
  }
@@ -284,6 +316,8 @@ return "effectTwo"
 
 
 } 
+
+
 
 removeLastAdded(){
   //Set new params for already drawn polyline and markers
@@ -303,7 +337,7 @@ removeLastAdded(){
 
   if(marker){
     let _polylineIndex  = marker._polylineIndex;
-
+    console.log(_polylineIndex);
     if(!this.polyIndexMap[_polylineIndex] || this.polyIndexMap[_polylineIndex].length == 0){
       this.markers.splice(this.markers.length-1,1);
       if(marker){
@@ -326,10 +360,287 @@ removeLastAdded(){
 }
 
 onSaveLine(){
-  this.onsave.emit(this.polyline);
+  //throw new Error("test");
+  
   this.editing = false;
   this.drawPolyLine.getLatLngs().splice(0, 2);
   this.drawPolyLine.redraw();
+  this.rearrangeMarkers();
+  this.markers = [];
+  this.addSaved();
+  var length = this.polyline.getLatLngs().length;
+  this.polyline.getLatLngs().splice(0,length);
+  //this.existing
+  
+  this.polyIndexMap ={};
+  
+  this.polyline.redraw();
+  this.redrawSaved();
+  
+
+}
+
+rearrangeMarkers(){
+
+  this.markers.forEach((marker)=>{
+
+    var latlng = marker.getLatLng();
+    this.map.removeLayer(marker);
+    
+    var keysLength = 1+Object.keys(this.existingMarkersMap).length;
+    
+    //var keys   =  this.existingMarkersMap.keys.length;
+    var new_marker = {};
+    new_marker['marker_id'] = marker.marker_id;
+    new_marker['name']      = "A-"+keysLength;
+    new_marker['lat']       = latlng.lat;
+    new_marker['lng']       = latlng.lng;
+    // new_marker
+    var key = latlng.lat +"-"+latlng.lng;
+    if(!this.existingMarkersMap[key]){
+      this.addSingleMarker(new_marker);
+      this.onmarkeradded.emit(new_marker);
+      this.existingMarkersMap[key] = new_marker;
+    }
+
+
+  });
+}
+
+addSingleMarker(markerObj){
+  var name = markerObj.name;
+  var self = this;
+    var markerIcon = new L.DivIcon({
+        className: 'my-div-icon',
+        html: '<img class="my-div-image" src="/assets/waypoints_marker.png"'+
+              '<span class="my-div-span">'+name+'</span>'
+    })
+
+    
+    var marker = new L.Marker(new L.latLng(markerObj.lat, markerObj.lng),{
+          clickable: true,
+          draggable: true,
+          icon: markerIcon,
+         
+    });
+    // if(!markerObj.marker_id){
+    //   marker.marker_id = UUID.UUID();
+    // }
+    // markerObj.name      = name;
+    this.map.addLayer(marker);
+    let map_copy = this.map
+    marker.on('dragstart',function(e){
+        let latlng = this.getLatLng();
+        self.draggedKey = latlng.lat+"-"+latlng.lng;
+        
+        
+    });
+    marker.on('dragend', function(e){
+      L.DomEvent.stopPropagation(e);
+
+      let markerObj = self.existingMarkersMap[self.draggedKey]
+      delete self.existingMarkersMap[self.draggedKey];
+
+      //change marker position in marker map
+      let latlng = this.getLatLng();
+      let newkey = latlng.lat+"-"+latlng.lng;
+      markerObj.lat = latlng.lat;
+      markerObj.lng = latlng.lng;
+      self.existingMarkersMap[newkey] = markerObj;
+      this.onmarkerchanged.emit(markerObj);
+      //change polylines data assosciated with markers
+      self.changeRoutesData(markerObj);
+
+
+    });
+    marker.on('click', function(e){
+      L.DomEvent.stopPropagation(e);
+      if(self.editing){
+        var length = self.polyline.getLatLngs().length;
+
+      
+        
+        self.polyline.addLatLng(this.getLatLng());
+        self.polyline.redraw();
+
+        
+        self.drawPolyLine.getLatLngs().splice(0, 2);
+        
+        self.drawPolyLine.addLatLng(this.getLatLng());
+        
+        self.drawPolyLine.redraw();
+      }
+    });
+    marker.on('contextmenu', function(e) {
+      L.DomEvent.stopPropagation(e);
+      var tdiv='Delete ? '+markerObj.marker_id;
+      var tpopup = L.popup({closeButton:true})
+                    .setLatLng(e.latlng)
+                    .setContent(tdiv)
+                    .openOn(map_copy);
+      let latlng = this.getLatLng();
+      let key = latlng.lat+"-"+latlng.lng;
+      tpopup._wrapper.addEventListener('click', ()=>{
+         //console.log("delete");
+         map_copy.removeLayer(marker);
+        map_copy.closePopup();
+        delete self.existingMarkersMap[key];
+        this.onmarkerdeleted.emit(markerObj);
+        let polyObjs = self.routeMarkerMap[markerObj.marker_id];
+        if(polyObjs){
+            polyObjs.forEach(obj=>{
+              let index = self.savedPolylines.indexOf(obj);
+              self.savedPolylines.splice(index,1);
+              this.onroutedeleted.emit(obj);
+            });
+          }
+          self.redrawSaved();
+        });
+      });
+    
+    // return marker;
+}
+
+changeRoutesData(marker){
+  let polyObjs = this.routeMarkerMap[marker.marker_id];
+  if(polyObjs){
+    polyObjs.forEach(obj=>{
+
+        if(obj.from_point_marker_id == marker.marker_id){
+          //change from lat and lng
+          obj.from_point_lat  = marker.lat;
+          obj.from_point_lng  = marker.lng;
+        }else{
+          //change to lat and lng
+          obj.to_point_lat  = marker.lat;
+          obj.to_point_lng  = marker.lng;
+        }
+        this.onroutechanged.emit(obj);
+    })
+  }
+  this.redrawSaved();
+}
+
+
+addSaved(){
+ 
+ var length = this.polyline.getLatLngs().length;
+
+ 
+  this.polyline.getLatLngs().forEach((latlng,i)=>{
+ //   var temp =  L.polyline([], {
+ //      color: '#00897B',
+ //      clickable: 'true'
+ //   }).addTo(this.map);
+
+   if(i < length-1)
+     {
+       var polyLineObj = {};
+       var reverseLineObj = {};
+       var firstMarkerKey = latlng.lat+"-"+latlng.lng;
+       var secondMarkerKey = this.polyline.getLatLngs()[i+1].lat+"-"+this.polyline.getLatLngs()[i+1].lng;
+       var firstMarker     = this.existingMarkersMap[firstMarkerKey];
+       var secondMarker    = this.existingMarkersMap[secondMarkerKey];
+       //since routes are bi-directional by default add these twice
+       polyLineObj['from_point_marker_id'] = firstMarker['marker_id'];
+       polyLineObj['to_point_marker_id']   = secondMarker['marker_id'];
+       polyLineObj['from_point_name']      = firstMarker['name'];
+       polyLineObj['to_point_name']        = secondMarker['name'];
+       polyLineObj['from_point_lat']       = firstMarker['lat'];
+       polyLineObj['to_point_lat']         = secondMarker['lat'];
+       polyLineObj['from_point_lng']       = firstMarker['lng'];
+       polyLineObj['to_point_lng']         = secondMarker['lng'];
+       polyLineObj['distance_weight']      = 1;
+       polyLineObj['line_id']              = UUID.UUID();
+
+       reverseLineObj['from_point_marker_id'] = firstMarker['marker_id'];
+       reverseLineObj['to_point_marker_id']   = secondMarker['marker_id'];
+       reverseLineObj['from_point_name']      = firstMarker['name'];
+       reverseLineObj['to_point_name']        = secondMarker['name'];
+       reverseLineObj['from_point_lat']       = firstMarker['lat'];
+       reverseLineObj['to_point_lat']         = secondMarker['lat'];
+       reverseLineObj['from_point_lng']       = firstMarker['lng'];
+       reverseLineObj['to_point_lng']         = secondMarker['lng'];
+       reverseLineObj['distance_weight']      = 1;
+       reverseLineObj['line_id']              = UUID.UUID();
+
+       this.savedPolylines.push(polyLineObj);
+       this.savedPolylines.push(reverseLineObj);
+
+       if(this.routeMarkerMap[firstMarker['marker_id']]){
+         this.routeMarkerMap[firstMarker['marker_id']].push(polyLineObj);
+         this.routeMarkerMap[firstMarker['marker_id']].push(reverseLineObj);
+       }else{
+         this.routeMarkerMap[firstMarker['marker_id']] = [];
+         this.routeMarkerMap[firstMarker['marker_id']].push(polyLineObj);
+         this.routeMarkerMap[firstMarker['marker_id']].push(reverseLineObj);
+       }
+
+
+       if(this.routeMarkerMap[secondMarker['marker_id']]){
+         this.routeMarkerMap[secondMarker['marker_id']].push(polyLineObj);
+         this.routeMarkerMap[secondMarker['marker_id']].push(reverseLineObj);
+       }else{
+         this.routeMarkerMap[secondMarker['marker_id']] = [];
+         this.routeMarkerMap[secondMarker['marker_id']].push(polyLineObj);
+         this.routeMarkerMap[secondMarker['marker_id']].push(reverseLineObj);
+       }
+
+     }
+  }); 
+   
+}
+
+redrawSaved(){
+  this.polyLines.forEach(polyline=>{
+    this.map.removeLayer(polyline);
+  });
+  
+  this.savedPolylines.forEach((polylineObj)=>{
+
+      let polyline =  L.polyline([[polylineObj.from_point_lat, polylineObj.from_point_lng],[polylineObj.to_point_lat, polylineObj.to_point_lng]], {
+        color: '#00897B',
+        clickable: 'true'
+      })
+      this.onrouteadded.emit(polylineObj);
+      polyline.polyline_id = polylineObj.line_id;
+      
+
+      polyline.on('contextmenu', (e)=>{
+        //console.log("right click");
+        L.DomEvent.stopPropagation(e);
+        var tdiv='Delete ?';
+        var tpopup = L.popup({closeButton:true})
+                    .setLatLng(e.latlng)
+                    .setContent(tdiv)
+                      .openOn(this.map);
+        tpopup._wrapper.addEventListener('click', ()=>{
+           //console.log("delete");
+           this.onroutedeleted.emit(polylineObj);
+           this.map.removeLayer(polyline);
+          this.map.closePopup();
+        });
+        
+      });
+      
+      polyline.on('click', (e)=>{
+        //console.log(polyline.polyline_id);
+      });
+      //polyline.redraw();
+      polyline.addTo(this.map);
+      this.polyLines.push(polyline);
+
+  })
+  //this.redrawAll();
+
+}
+
+redrawAll(){
+  this.polyLines.forEach(polyline=>{
+    //console.log(polyline.getLatLngs());
+    polyline.addTo(this.map);
+    polyline.redraw();
+  })
 }
 
 }
