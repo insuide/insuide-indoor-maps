@@ -130,9 +130,13 @@ polyLines = [];
   constructor() {}
 
   ngOnInit(){
-  	
-    
-   this.map = L.map('map').setView(this.center, this.zoom);
+    if(!this.map){
+      this.map = L.map('map');
+    }
+  	this.mapInit();
+ }
+ mapInit(){
+   this.map.setView(this.center, this.zoom);
    
    L.tileLayer(this.tilesUrl, {
          minZoom: this.minZoom, maxZoom: this.maxZoom,
@@ -162,10 +166,18 @@ polyLines = [];
         this.drawPolyLine.redraw();
       }
     })
+ }
 
-
-
-}
+ngOnChanges(changes: any) {
+  if(!this.map){
+      this.map = L.map('map');
+  }
+  //console.log("change");
+    this.mapInit();
+ }
+ // ngDoCheck() {
+ //   console.log("check called");
+ // };
 
 
 
@@ -651,7 +663,8 @@ addSaved(){
 
        this.savedPolylines.push(polyLineObj);
        this.savedPolylines.push(reverseLineObj);
-
+       this.onrouteadded.emit(polyLineObj);
+       this.onrouteadded.emit(reverseLineObj);
        
 
      }
@@ -670,7 +683,7 @@ redrawSaved(){
         color: '#00897B',
         clickable: 'true'
       })
-      this.onrouteadded.emit(polylineObj);
+      
       polyline.polyline_id = polylineObj.line_id;
       if(this.routeMarkerMap[polylineObj['from_point_marker_id']]){
          this.routeMarkerMap[polylineObj['from_point_marker_id']].push(polylineObj);
