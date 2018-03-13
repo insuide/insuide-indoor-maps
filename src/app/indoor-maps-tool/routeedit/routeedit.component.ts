@@ -53,19 +53,19 @@ minZoom:number=16;
 @Input()
 maxZoom:number=22;
 
-@Input()
-vectorTileStyling:any=layerStyles;
+// @Input()
+// vectorTileStyling:any=layerStyles;
 
 
 
-@Input()
-vectortileOptions:any={
-			rendererFactory: L.canvas.tile,
-			attribution: '<a href="https://openmaptiles.org/">&copy; OpenMapTiles</a>, <a href="http://www.openstreetmap.org/copyright">&copy; OpenStreetMap</a> contributors',
-			vectorTileLayerStyles: this.vectorTileStyling,
-			subdomains: '0123',
-			key: 'UmmATPUongHdDmIicgs7'
-};
+// @Input()
+// vectortileOptions:any={
+// 			rendererFactory: L.canvas.tile,
+// 			attribution: '<a href="https://openmaptiles.org/">&copy; OpenMapTiles</a>, <a href="http://www.openstreetmap.org/copyright">&copy; OpenStreetMap</a> contributors',
+// 			vectorTileLayerStyles: this.vectorTileStyling,
+// 			subdomains: '0123',
+// 			key: 'UmmATPUongHdDmIicgs7'
+// };
 
 @Input()
 tilesUrl:string="http://mapwarper.net/maps/tile/21937/{z}/{x}/{y}.png"
@@ -122,7 +122,7 @@ routeMarkerMap:any[] = [];
 
 polyLines = [];
 
-
+initialized:boolean;
 
    
 @ViewChild('map') el:ElementRef;
@@ -132,18 +132,40 @@ polyLines = [];
   ngOnInit(){
     if(!this.map){
       this.map = L.map('map');
+      
     }
   	this.mapInit();
  }
  mapInit(){
+   
+    this.setMapData();
+    this.setPolyLines();
+    this.initMarkers();
+    this.initRoutes();
+    if(!this.initialized){
+      this.initiateDrawing();
+      this.map.on('mousemove',(e)=>{
+        if(this.drawPolyLine.getLatLngs().length > 0 && this.editing){
+          this.drawPolyLine.getLatLngs().splice(1, 1, e.latlng);
+          this.drawPolyLine.redraw();
+        }
+      })
+      this.initialized = true;
+    }
+ }
+
+ setMapData(){
    this.map.setView(this.center, this.zoom);
+
    
    L.tileLayer(this.tilesUrl, {
          minZoom: this.minZoom, maxZoom: this.maxZoom,
          attribution: 'Insuide Tiles from mapwarper'
      }).addTo(this.map);
-  
-    this.polyline = L.polyline([], {
+ }
+
+ setPolyLines(){
+   this.polyline = L.polyline([], {
       color: '#BB6BD9',
       clickable: 'true'
     }).addTo(this.map);
@@ -155,25 +177,48 @@ polyLines = [];
       clickable: 'true'
     }).addTo(this.map);
 
-
-    this.initiateDrawing();
-    this.initMarkers();
-    this.initRoutes();
-
-    this.map.on('mousemove',(e)=>{
-      if(this.drawPolyLine.getLatLngs().length > 0 && this.editing){
-        this.drawPolyLine.getLatLngs().splice(1, 1, e.latlng);
-        this.drawPolyLine.redraw();
-      }
-    })
  }
 
 ngOnChanges(changes: any) {
   if(!this.map){
       this.map = L.map('map');
   }
-  //console.log("change");
-    this.mapInit();
+  if( changes['tilesUrl'] && changes['tilesUrl'].previousValue != changes['tilesUrl'].currentValue ) {
+    // tilesUrl prop changed
+    this.setMapData();
+    
+  }
+  if( changes['center'] && changes['center'].previousValue != changes['center'].currentValue ) {
+    // tilesUrl prop changed
+    this.setMapData();
+    
+  }
+  if( changes['minZoom'] && changes['minZoom'].previousValue != changes['minZoom'].currentValue ) {
+    // tilesUrl prop changed
+    this.setMapData();
+    
+  }
+  if( changes['maxZoom'] && changes['maxZoom'].previousValue != changes['maxZoom'].currentValue ) {
+    // tilesUrl prop changed
+    this.setMapData();
+    
+  }
+  if( changes['zoom'] && changes['zoom'].previousValue != changes['zoom'].currentValue ) {
+    // tilesUrl prop changed
+    this.setMapData();
+    this.setPolyLines();
+  }
+  if( changes['existingMarkers'] && changes['existingMarkers'].previousValue != changes['existingMarkers'].currentValue ) {
+    // existingMarkers prop changed
+    this.initMarkers();
+
+  }
+  if( changes['existingRoutes'] && changes['existingRoutes'].previousValue != changes['existingRoutes'].currentValue ) {
+    // existingRoutes prop changed
+    this.initRoutes();
+
+  }
+    
  }
  // ngDoCheck() {
  //   console.log("check called");
@@ -204,8 +249,17 @@ initMarkers(){
     
     //var keys   =  this.existingMarkersMap.keys.length;
     var new_marker = {};
-    new_marker['marker_id'] = marker.marker_id;
-    new_marker['name']      = "A-"+keysLength;
+    if(marker.marker_id){
+      new_marker['marker_id'] = marker.marker_id;
+    }else{
+      new_marker['marker_id'] = UUID.UUID();
+    }
+    if(marker.name){
+      new_marker['name']      = marker.name;
+    }else{
+      new_marker['name']      = "A-"+keysLength;
+    }
+    
     new_marker['lat']       = marker.lat;
     new_marker['lng']       = marker.lng;
     // new_marker
@@ -222,7 +276,9 @@ initMarkers(){
 
 
 initRoutes(){
-  
+  this.polyLines.forEach(polyline=>{
+    this.map.removeLayer(polyline);
+  });
   
   this.existingRoutes.forEach((polyLineObj)=>{
 
@@ -629,13 +685,15 @@ addSaved(){
  //      color: '#00897B',
  //      clickable: 'true'
  //   }).addTo(this.map);
-
+   //let i = this.polyline.getLatLngs().indexOf(latlng);
    if(i < length-1)
      {
        var polyLineObj = {};
        var reverseLineObj = {};
        var firstMarkerKey = latlng.lat+"-"+latlng.lng;
+
        var secondMarkerKey = this.polyline.getLatLngs()[i+1].lat+"-"+this.polyline.getLatLngs()[i+1].lng;
+       
        var firstMarker     = this.existingMarkersMap[firstMarkerKey];
        var secondMarker    = this.existingMarkersMap[secondMarkerKey];
        //since routes are bi-directional by default add these twice
@@ -650,19 +708,20 @@ addSaved(){
        polyLineObj['distance_weight']      = 1;
        polyLineObj['line_id']              = UUID.UUID();
 
-       reverseLineObj['from_point_marker_id'] = firstMarker['marker_id'];
-       reverseLineObj['to_point_marker_id']   = secondMarker['marker_id'];
-       reverseLineObj['from_point_name']      = firstMarker['name'];
-       reverseLineObj['to_point_name']        = secondMarker['name'];
-       reverseLineObj['from_point_lat']       = firstMarker['lat'];
-       reverseLineObj['to_point_lat']         = secondMarker['lat'];
-       reverseLineObj['from_point_lng']       = firstMarker['lng'];
-       reverseLineObj['to_point_lng']         = secondMarker['lng'];
+       reverseLineObj['to_point_marker_id'] = firstMarker['marker_id'];
+       reverseLineObj['from_point_marker_id']   = secondMarker['marker_id'];
+       reverseLineObj['to_point_name']      = firstMarker['name'];
+       reverseLineObj['from_point_name']        = secondMarker['name'];
+       reverseLineObj['to_point_lat']       = firstMarker['lat'];
+       reverseLineObj['from_point_lat']         = secondMarker['lat'];
+       reverseLineObj['to_point_lng']       = firstMarker['lng'];
+       reverseLineObj['from_point_lng']         = secondMarker['lng'];
        reverseLineObj['distance_weight']      = 1;
        reverseLineObj['line_id']              = UUID.UUID();
 
        this.savedPolylines.push(polyLineObj);
        this.savedPolylines.push(reverseLineObj);
+       //console.log(polylineObj);
        this.onrouteadded.emit(polyLineObj);
        this.onrouteadded.emit(reverseLineObj);
        
@@ -678,7 +737,7 @@ redrawSaved(){
   });
   
   this.savedPolylines.forEach((polylineObj)=>{
-
+      
       let polyline =  L.polyline([[polylineObj.from_point_lat, polylineObj.from_point_lng],[polylineObj.to_point_lat, polylineObj.to_point_lng]], {
         color: '#00897B',
         clickable: 'true'

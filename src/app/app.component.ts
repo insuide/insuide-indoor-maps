@@ -8,4 +8,7 @@ import { Component } from '@angular/core';
 export class AppComponent {
   title = 'app';
   url='http://mapwarper.net/maps/tile/21921/';
+
+
+  
 }
