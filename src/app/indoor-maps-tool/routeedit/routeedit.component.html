@@ -10,5 +10,9 @@
     </button>
  	<button class="second-btn" (click)="removeLastAdded()"><i class="mdi mdi-delete mdi-24px"></i></button>
  	<button class="third-btn" (click)="onSaveLine()"><i class="mdi mdi-content-save-all mdi-24px"></i></button>
+ 	<button class="fourth-btn" (click)="onSpliceLine()">
+ 		<span *ngIf="splicing"><i class="mdi mdi-link mdi-24px"></i></span>
+        <span *ngIf="!splicing" ><i class="mdi mdi-link-off mdi-24px"></i></span>
+ 	</button>
  </div>
 

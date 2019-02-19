@@ -3,14 +3,14 @@ import { ErrorObservable } from 'rxjs/observable/ErrorObservable';
 
 import {} from '@types/leaflet';
 import { layerStyles } from '../layerStyles';
-import { geojson } from '../geojson';
+//import { geojson } from '../geojson';
 import { UUID } from 'angular2-uuid';
 
 
 declare var L : any;
 declare var jQuery: any;
 declare var draw:any;
-declare var geojsonvt:any;
+//declare var geojsonvt:any;
 @Component({
   selector: 'insuide-routeedit',
   templateUrl: './routeedit.component.html',
@@ -25,7 +25,7 @@ map:any;
 
 
 editing: boolean=true;
-
+splicing:boolean = false;
 
 
 
@@ -68,11 +68,11 @@ maxZoom:number=22;
 // };
 
 @Input()
-tilesUrl:string="http://mapwarper.net/maps/tile/21937/{z}/{x}/{y}.png"
+tilesUrl:string="http://mapwarper.net/maps/tile/21711/{z}/{x}/{y}.png"
 
 
 @Input()
-center:number[]= [47.4330331,19.261177];
+center:number[]= [19.167651, 72.853086];
 
 
 
@@ -90,6 +90,8 @@ onmarkeradded:EventEmitter<any>            = new EventEmitter<any>();
 onrouteadded:EventEmitter<any>             = new EventEmitter<any>();
 @Output()
 onmarkerclicked:EventEmitter<any>             = new EventEmitter<any>();
+@Output()
+onEditModeChanged:EventEmitter<any>             = new EventEmitter<any>();
 
 
 
@@ -118,12 +120,12 @@ existingRoutes:any[]=[];
 
 
 
-routeMarkerMap:any[] = [];
+routeMarkerMap:any = {};
 
 polyLines = [];
 
 initialized:boolean;
-
+addedMarkers:any[]=[];
    
 @ViewChild('map') el:ElementRef;
 
@@ -156,7 +158,7 @@ initialized:boolean;
 
  setMapData(){
    this.map.setView(this.center, this.zoom);
-
+   console.log("map set again");
    
    L.tileLayer(this.tilesUrl, {
          minZoom: this.minZoom, maxZoom: this.maxZoom,
@@ -177,6 +179,19 @@ initialized:boolean;
       clickable: 'true'
     }).addTo(this.map);
 
+ }
+
+ removeAllMarkers(){
+   this.existingMarkersMap = {};
+   this.addedMarkers.forEach(marker=>{
+     this.map.removeLayer(marker);
+   })
+   this.markers.forEach(marker=>{
+     this.map.removeLayer(marker);
+   })
+   
+   this.addedMarkers = [];
+   this.markers = [];
  }
 
 ngOnChanges(changes: any) {
@@ -211,13 +226,19 @@ ngOnChanges(changes: any) {
   if( changes['existingMarkers'] && changes['existingMarkers'].previousValue != changes['existingMarkers'].currentValue ) {
     // existingMarkers prop changed
     this.initMarkers();
+    //this.initRoutes();
 
   }
   if( changes['existingRoutes'] && changes['existingRoutes'].previousValue != changes['existingRoutes'].currentValue ) {
     // existingRoutes prop changed
+    //this.initMarkers();
     this.initRoutes();
 
   }
+
+  // if( changes['editing'] && changes['editing'].previousValue != changes['editing'].currentValue ) {
+  //     this.onEditModeChanged.emit(changes['editing'].currentValue);
+  // }
     
  }
  // ngDoCheck() {
@@ -240,7 +261,7 @@ initiateDrawing(){
 }
 
 initMarkers(){
-
+  this.removeAllMarkers();
   this.existingMarkers.forEach((marker)=>{
 
     
@@ -276,10 +297,11 @@ initMarkers(){
 
 
 initRoutes(){
+  //this.removeAllMarkers();
   this.polyLines.forEach(polyline=>{
     this.map.removeLayer(polyline);
   });
-  
+  this.savedPolylines = [];
   this.existingRoutes.forEach((polyLineObj)=>{
 
       let polyline =  L.polyline([[polyLineObj.from_point_lat, polyLineObj.from_point_lng],[polyLineObj.to_point_lat, polyLineObj.to_point_lng]], {
@@ -325,11 +347,53 @@ initRoutes(){
       });
       
       polyline.on('click', (e)=>{
+
+          if(this.splicing){
+          // console.log(e.latlng);
+          // console.log(polyline);
+          /*
+            Removing the current added polyline and adding new
+          */
+          let frompolyObjs = this.routeMarkerMap[polyLineObj['from_point_marker_id']];
+          //let topolyObjs = this.routeMarkerMap[polyLineObj['to_point_marker_id']];
+          //let commonPolyLines = [];
+          frompolyObjs.forEach(left=>{
+            if(left.line_id == polyLineObj.line_id){
+                  let index = this.savedPolylines.indexOf(left);
+                  this.savedPolylines.splice(index,1);
+                  this.onroutedeleted.emit(left);
+              }else if(left.from_point_marker_id == polyLineObj.to_point_marker_id && left.to_point_marker_id == polyLineObj.from_point_marker_id){
+                  let index = this.savedPolylines.indexOf(left);
+                  this.savedPolylines.splice(index,1);
+                  this.onroutedeleted.emit(left);
+              }
+          })
+          // topolyObjs.forEach(right=>{
+          //     if(right.line_id == polyLineObj.line_id){
+          //         let index = this.savedPolylines.indexOf(right);
+          //         this.savedPolylines.splice(index,1);
+          //         this.onroutedeleted.emit(right);
+          //     }else if(right.from_point_marker_id == polyLineObj.to_point_marker_id && right.to_point_marker_id == polyLineObj.from_point_marker_id){
+          //         let index = this.savedPolylines.indexOf(right);
+          //         this.savedPolylines.splice(index,1);
+          //         this.onroutedeleted.emit(right);
+          //     }
+          //   })
+          //add marker
+          this.addMarkerSplit(e.latlng);
+          //add two routes to left point
+          this.addSavedSplit(new L.latLng(polyLineObj.from_point_lat, polyLineObj.from_point_lng),e.latlng)
+          //add two routes to right
+          this.addSavedSplit(e.latlng,new L.latLng(polyLineObj.to_point_lat, polyLineObj.to_point_lng))
+          //redraw every polyline
+          this.redrawSaved();
+        }
         
       });
       
       polyline.addTo(this.map);
       this.polyLines.push(polyline);
+      this.savedPolylines.push(polyLineObj);
 
   })
   //this.redrawAll();
@@ -455,6 +519,7 @@ changeEditMode() {
           this.drawPolyLine.getLatLngs().splice(0, 2);
           this.drawPolyLine.redraw();
         }
+        this.onEditModeChanged.emit(this.editing);
 }
 
 getCSSClasses() {
@@ -581,12 +646,19 @@ addSingleMarker(markerObj){
     this.map.addLayer(marker);
     let map_copy = this.map
     marker.on('dragstart',function(e){
+        // if(this.editing){
+        //   return;
+        // }
         let latlng = this.getLatLng();
         self.draggedKey = latlng.lat+"-"+latlng.lng;
         
         
     });
     marker.on('dragend', function(e){
+      console.log("xxxx");
+      // if(this.editing){
+      //     return;
+      // }
       L.DomEvent.stopPropagation(e);
 
       let markerObj = self.existingMarkersMap[self.draggedKey]
@@ -598,7 +670,7 @@ addSingleMarker(markerObj){
       markerObj.lat = latlng.lat;
       markerObj.lng = latlng.lng;
       self.existingMarkersMap[newkey] = markerObj;
-      this.onmarkerchanged.emit(markerObj);
+      self.onmarkerchanged.emit(markerObj);
       //change polylines data assosciated with markers
       self.changeRoutesData(markerObj);
 
@@ -638,24 +710,25 @@ addSingleMarker(markerObj){
          map_copy.removeLayer(marker);
         map_copy.closePopup();
         delete self.existingMarkersMap[key];
-        this.onmarkerdeleted.emit(markerObj);
+        self.onmarkerdeleted.emit(markerObj);
         let polyObjs = self.routeMarkerMap[markerObj.marker_id];
         if(polyObjs){
             polyObjs.forEach(obj=>{
               let index = self.savedPolylines.indexOf(obj);
               self.savedPolylines.splice(index,1);
-              this.onroutedeleted.emit(obj);
+              self.onroutedeleted.emit(obj);
             });
           }
           self.redrawSaved();
         });
       });
-    
+      this.addedMarkers.push(marker);
     // return marker;
 }
 
 changeRoutesData(marker){
   let polyObjs = this.routeMarkerMap[marker.marker_id];
+  //console.log(polyObjs);
   if(polyObjs){
     polyObjs.forEach(obj=>{
 
@@ -735,6 +808,7 @@ redrawSaved(){
   this.polyLines.forEach(polyline=>{
     this.map.removeLayer(polyline);
   });
+  this.routeMarkerMap = {};
   
   this.savedPolylines.forEach((polylineObj)=>{
       
@@ -781,7 +855,41 @@ redrawSaved(){
       });
       
       polyline.on('click', (e)=>{
-        //console.log(polyline.polyline_id);
+        if(this.splicing){
+          // console.log(e.latlng);
+          // console.log(polyline);
+          /*
+            Removing the current added polyline and adding new
+          */
+          let frompolyObjs = this.routeMarkerMap[polylineObj['from_point_marker_id']];
+          //let topolyObjs = this.routeMarkerMap[polylineObj['to_point_marker_id']];
+          //let commonPolyLines = [];
+          console.log(this.savedPolylines);
+          frompolyObjs.forEach(left=>{
+            if(left.line_id == polylineObj.line_id){
+                  let index = this.savedPolylines.indexOf(left);
+                  this.savedPolylines.splice(index,1);
+                  this.onroutedeleted.emit(left);
+              }else if(left.from_point_marker_id == polylineObj.to_point_marker_id && left.to_point_marker_id == polylineObj.from_point_marker_id){
+                  let index = this.savedPolylines.indexOf(left);
+                  if(index != -1){
+                    this.savedPolylines.splice(index,1);
+                    this.onroutedeleted.emit(left);
+                  }
+              }
+          })
+          
+          console.log(this.savedPolylines);
+          this.map.removeLayer(polyline);
+          //add marker
+          this.addMarkerSplit(e.latlng);
+          //add two routes to left point
+          this.addSavedSplit(new L.latLng(polylineObj.from_point_lat, polylineObj.from_point_lng),e.latlng)
+          //add two routes to right
+          this.addSavedSplit(e.latlng,new L.latLng(polylineObj.to_point_lat, polylineObj.to_point_lng))
+          //redraw every polyline
+          this.redrawSaved();
+        }
       });
       //polyline.redraw();
       polyline.addTo(this.map);
@@ -790,6 +898,74 @@ redrawSaved(){
   })
   //this.redrawAll();
 
+}
+
+addSavedSplit(latlng1,latlng2){
+       
+ 
+ 
+       var polyLineObj = {};
+       var reverseLineObj = {};
+       var firstMarkerKey = latlng1.lat+"-"+latlng1.lng;
+
+       var secondMarkerKey = latlng2.lat+"-"+latlng2.lng;
+       
+       var firstMarker     = this.existingMarkersMap[firstMarkerKey];
+       var secondMarker    = this.existingMarkersMap[secondMarkerKey];
+       //since routes are bi-directional by default add these twice
+       polyLineObj['from_point_marker_id'] = firstMarker['marker_id'];
+       polyLineObj['to_point_marker_id']   = secondMarker['marker_id'];
+       polyLineObj['from_point_name']      = firstMarker['name'];
+       polyLineObj['to_point_name']        = secondMarker['name'];
+       polyLineObj['from_point_lat']       = firstMarker['lat'];
+       polyLineObj['to_point_lat']         = secondMarker['lat'];
+       polyLineObj['from_point_lng']       = firstMarker['lng'];
+       polyLineObj['to_point_lng']         = secondMarker['lng'];
+       polyLineObj['distance_weight']      = 1;
+       polyLineObj['line_id']              = UUID.UUID();
+
+       reverseLineObj['to_point_marker_id'] = firstMarker['marker_id'];
+       reverseLineObj['from_point_marker_id']   = secondMarker['marker_id'];
+       reverseLineObj['to_point_name']      = firstMarker['name'];
+       reverseLineObj['from_point_name']        = secondMarker['name'];
+       reverseLineObj['to_point_lat']       = firstMarker['lat'];
+       reverseLineObj['from_point_lat']         = secondMarker['lat'];
+       reverseLineObj['to_point_lng']       = firstMarker['lng'];
+       reverseLineObj['from_point_lng']         = secondMarker['lng'];
+       reverseLineObj['distance_weight']      = 1;
+       reverseLineObj['line_id']              = UUID.UUID();
+
+       this.savedPolylines.push(polyLineObj);
+       this.savedPolylines.push(reverseLineObj);
+       //console.log(polylineObj);
+       this.onrouteadded.emit(polyLineObj);
+       this.onrouteadded.emit(reverseLineObj);
+       
+
+  
+   
+}
+
+addMarkerSplit(latlng){
+  var keysLength = 1+Object.keys(this.existingMarkersMap).length;
+    
+    //var keys   =  this.existingMarkersMap.keys.length;
+    var new_marker = {};
+    new_marker['marker_id'] = UUID.UUID();
+    new_marker['name']      = "A-"+keysLength;
+    new_marker['lat']       = latlng.lat;
+    new_marker['lng']       = latlng.lng;
+    // new_marker
+    var key = latlng.lat +"-"+latlng.lng;
+    if(!this.existingMarkersMap[key]){
+      this.addSingleMarker(new_marker);
+      this.onmarkeradded.emit(new_marker);
+      this.existingMarkersMap[key] = new_marker;
+    }
+}
+
+onSpliceLine(){
+  this.splicing = !this.splicing;
 }
 
 redrawAll(){
