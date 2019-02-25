@@ -89,6 +89,8 @@ onmarkeradded:EventEmitter<any>            = new EventEmitter<any>();
 @Output()
 onrouteadded:EventEmitter<any>             = new EventEmitter<any>();
 @Output()
+onlevelroutedeleted:EventEmitter<any>           = new EventEmitter<any>();
+@Output()
 onmarkerclicked:EventEmitter<any>             = new EventEmitter<any>();
 @Output()
 onEditModeChanged:EventEmitter<any>             = new EventEmitter<any>();
@@ -112,6 +114,7 @@ existingMarkersMap:any={};
 
 
 savedPolylines:any[]=[];
+levelsavedPolylines:any[]=[];
 @Input()
 existingMarkers:any[] =[];
 @Input()
@@ -126,6 +129,9 @@ routeMarkerMap:any = {};
 
 polyLines = [];
 arrowPolyLines=[];
+
+levelpolyLines = [];
+levelarrowPolyLines=[];
 
 initialized:boolean;
 addedMarkers:any[]=[];
@@ -147,6 +153,7 @@ addedMarkers:any[]=[];
     this.setPolyLines();
     this.initMarkers();
     this.initRoutes();
+    this.initLevelChangers();
     if(!this.initialized){
       this.initiateDrawing();
       this.map.on('mousemove',(e)=>{
@@ -239,6 +246,13 @@ ngOnChanges(changes: any) {
 
   }
 
+  if( changes['levelChangers'] && changes['levelChangers'].previousValue != changes['levelChangers'].currentValue ) {
+    // existingRoutes prop changed
+    //this.initMarkers();
+    this.initLevelChangers();
+
+  }
+
   // if( changes['editing'] && changes['editing'].previousValue != changes['editing'].currentValue ) {
   //     this.onEditModeChanged.emit(changes['editing'].currentValue);
   // }
@@ -309,10 +323,23 @@ initRoutes(){
   });
   this.savedPolylines = [];
   this.existingRoutes.forEach((polyLineObj)=>{
-
+      console.log(polyLineObj.from_point_name);
+      console.log(polyLineObj.to_point_name);
+      let off    = this.angleFromCoordinate(polyLineObj.from_point_lat, polyLineObj.from_point_lng,polyLineObj.to_point_lat, polyLineObj.to_point_lng); 
+       console.log(off);
       let polyline =  L.polyline([[polyLineObj.from_point_lat, polyLineObj.from_point_lng],[polyLineObj.to_point_lat, polyLineObj.to_point_lng]], {
         color: '#00897B',
+        offset : off,
         clickable: 'true'
+      });
+      
+      
+      var pts = L.PolylineOffset.offsetPoints([[polyLineObj.from_point_lat, polyLineObj.from_point_lng],[polyLineObj.to_point_lat, polyLineObj.to_point_lng]],off,this.map);
+      console.log(pts);
+      var arrowHead = L.polylineDecorator(pts, {
+        patterns: [
+            {offset: '70%', repeat: 0, symbol: L.Symbol.arrowHead({pixelSize: 15, polygon: false, pathOptions: {stroke: true}})}
+        ]
       })
       //this.onrouteadded.emit(polylineObj);
       polyline.polyline_id = polyLineObj.line_id;
@@ -347,6 +374,7 @@ initRoutes(){
            //console.log("delete");
            this.onroutedeleted.emit(polyLineObj);
            this.map.removeLayer(polyline);
+           this.map.removeLayer(arrowHead);
           this.map.closePopup();
         });
         
@@ -399,17 +427,80 @@ initRoutes(){
       
       polyline.addTo(this.map);
 
-       var arrowHead = L.polylineDecorator(polyline, {
-        patterns: [
-            {offset: '70%', repeat: 0, symbol: L.Symbol.arrowHead({pixelSize: 15, polygon: false, pathOptions: {stroke: true}})}
-        ]
-      }).addTo(this.map);
+      arrowHead.addTo(this.map);
+       
 
       this.polyLines.push(polyline);
       this.arrowPolyLines.push(arrowHead);
       this.savedPolylines.push(polyLineObj);
 
-  })
+
+  });
+  //this.redrawAll();
+
+}
+
+initLevelChangers(){
+  //this.removeAllMarkers();
+  this.levelpolyLines.forEach(polyline=>{
+    this.map.removeLayer(polyline);
+  });
+  this.levelarrowPolyLines.forEach(polyline=>{
+    this.map.removeLayer(polyline);
+  });
+  this.levelsavedPolylines = [];
+  this.levelChangers.forEach((polyLineObj)=>{
+      let off    = this.angleFromCoordinate(polyLineObj.from_point_lat, polyLineObj.from_point_lng,polyLineObj.to_point_lat, polyLineObj.to_point_lng); 
+
+      
+      let polyline =  L.polyline([[polyLineObj.from_point_lat, polyLineObj.from_point_lng],[polyLineObj.to_point_lat, polyLineObj.to_point_lng]], {
+        color: '#bbdefb',
+        dashArray: '20,15',
+        offset:off,
+        opacity:.2,
+        clickable: 'true'
+      })
+
+      var arrowHead = L.polylineDecorator(polyline, {
+        patterns: [
+            {offset: '70%', repeat: 0, symbol: L.Symbol.arrowHead({pixelSize: 15, polygon: false, pathOptions: {stroke: true}})}
+        ]
+      })
+      //this.onrouteadded.emit(polylineObj);
+      polyline.polyline_id = polyLineObj.line_id;
+      
+
+      polyline.on('contextmenu', (e)=>{
+        //console.log("right click");
+        L.DomEvent.stopPropagation(e);
+        var tdiv='Delete ?';
+        var tpopup = L.popup({closeButton:true})
+                    .setLatLng(e.latlng)
+                    .setContent(tdiv)
+                      .openOn(this.map);
+        tpopup._wrapper.addEventListener('click', ()=>{
+           //console.log("delete");
+           this.onlevelroutedeleted.emit(polyLineObj);
+           this.map.removeLayer(polyline);
+           this.map.removeLayer(arrowHead);
+           this.map.closePopup();
+        });
+        
+      });
+      
+      
+      
+      polyline.addTo(this.map);
+
+      arrowHead.addTo(this.map);
+       
+
+      this.levelpolyLines.push(polyline);
+      this.levelarrowPolyLines.push(arrowHead);
+      this.levelsavedPolylines.push(polyLineObj);
+
+
+  });
   //this.redrawAll();
 
 }
@@ -828,10 +919,20 @@ redrawSaved(){
   this.routeMarkerMap = {};
   
   this.savedPolylines.forEach((polylineObj)=>{
+
+      let off    = this.angleFromCoordinate(polylineObj.from_point_lat, polylineObj.from_point_lng,polylineObj.to_point_lat, polylineObj.to_point_lng); 
+
+      
       
       let polyline =  L.polyline([[polylineObj.from_point_lat, polylineObj.from_point_lng],[polylineObj.to_point_lat, polylineObj.to_point_lng]], {
         color: '#00897B',
+        offset:off,
         clickable: 'true'
+      })
+      let arrowHead = L.polylineDecorator(polyline, {
+        patterns: [
+            {offset: '70%', repeat: 0, symbol: L.Symbol.arrowHead({pixelSize: 15, polygon: false, pathOptions: {stroke: true}})}
+        ]
       })
       
       polyline.polyline_id = polylineObj.line_id;
@@ -866,6 +967,7 @@ redrawSaved(){
            //console.log("delete");
            this.onroutedeleted.emit(polylineObj);
            this.map.removeLayer(polyline);
+           this.map.removeLayer(arrowHead);
           this.map.closePopup();
         });
         
@@ -910,11 +1012,7 @@ redrawSaved(){
       });
       //polyline.redraw();
       polyline.addTo(this.map);
-      var arrowHead = L.polylineDecorator(polyline, {
-        patterns: [
-            {offset: '70%', repeat: 0, symbol: L.Symbol.arrowHead({pixelSize: 15, polygon: false, pathOptions: {stroke: true}})}
-        ]
-      }).addTo(this.map);
+      arrowHead.addTo(this.map);
 
       this.polyLines.push(polyline);
       this.arrowPolyLines.push(arrowHead);
@@ -1003,6 +1101,25 @@ redrawAll(){
     polyline.addTo(this.map);
     polyline.redraw();
   })
+}
+
+angleFromCoordinate(lat1, long1, lat2,
+        long2) {
+
+    let dLon = (long2 - long1);
+
+    let y = Math.sin(dLon) * Math.cos(lat2);
+    let x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1)
+            * Math.cos(lat2) * Math.cos(dLon);
+
+    let brng = Math.atan2(y, x);
+    console.log(brng);
+    // brng = brng * 57.2958;
+    // brng = (brng + 360) % 360;
+    //brng = 360 - brng; // count degrees counter-clockwise - remove to make clockwise
+
+    //return brng > 0 ? 10 : -10;
+    return 3;
 }
 
 }
