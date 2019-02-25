@@ -116,6 +116,8 @@ savedPolylines:any[]=[];
 existingMarkers:any[] =[];
 @Input()
 existingRoutes:any[]=[];
+@Input()
+levelChangers :any[]=[];
 
 
 
@@ -123,6 +125,7 @@ existingRoutes:any[]=[];
 routeMarkerMap:any = {};
 
 polyLines = [];
+arrowPolyLines=[];
 
 initialized:boolean;
 addedMarkers:any[]=[];
@@ -301,6 +304,9 @@ initRoutes(){
   this.polyLines.forEach(polyline=>{
     this.map.removeLayer(polyline);
   });
+  this.arrowPolyLines.forEach(polyline=>{
+    this.map.removeLayer(polyline);
+  });
   this.savedPolylines = [];
   this.existingRoutes.forEach((polyLineObj)=>{
 
@@ -392,7 +398,15 @@ initRoutes(){
       });
       
       polyline.addTo(this.map);
+
+       var arrowHead = L.polylineDecorator(polyline, {
+        patterns: [
+            {offset: '70%', repeat: 0, symbol: L.Symbol.arrowHead({pixelSize: 15, polygon: false, pathOptions: {stroke: true}})}
+        ]
+      }).addTo(this.map);
+
       this.polyLines.push(polyline);
+      this.arrowPolyLines.push(arrowHead);
       this.savedPolylines.push(polyLineObj);
 
   })
@@ -808,6 +822,9 @@ redrawSaved(){
   this.polyLines.forEach(polyline=>{
     this.map.removeLayer(polyline);
   });
+  this.arrowPolyLines.forEach(polyline=>{
+    this.map.removeLayer(polyline);
+  });
   this.routeMarkerMap = {};
   
   this.savedPolylines.forEach((polylineObj)=>{
@@ -893,7 +910,14 @@ redrawSaved(){
       });
       //polyline.redraw();
       polyline.addTo(this.map);
+      var arrowHead = L.polylineDecorator(polyline, {
+        patterns: [
+            {offset: '70%', repeat: 0, symbol: L.Symbol.arrowHead({pixelSize: 15, polygon: false, pathOptions: {stroke: true}})}
+        ]
+      }).addTo(this.map);
+
       this.polyLines.push(polyline);
+      this.arrowPolyLines.push(arrowHead);
 
   })
   //this.redrawAll();
@@ -970,6 +994,11 @@ onSpliceLine(){
 
 redrawAll(){
   this.polyLines.forEach(polyline=>{
+    //console.log(polyline.getLatLngs());
+    polyline.addTo(this.map);
+    polyline.redraw();
+  })
+  this.arrowPolyLines.forEach(polyline=>{
     //console.log(polyline.getLatLngs());
     polyline.addTo(this.map);
     polyline.redraw();
