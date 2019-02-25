@@ -69,8 +69,9 @@ center:number[]= [19.167651, 72.853086];
  }
 
 setHeatMap(){
-	console.log("sss");
-	L.heatLayer(this.heatPoints, {radius: 6}).addTo(this.map);
+	// console.log("sss");
+	// L.heatLayer(this.heatPoints, {radius: 6}).addTo(this.map);
+  var heat = L.heatLayer(this.heatPoints, {radius: 25}).addTo(this.map);
 }
 	
   
@@ -82,18 +83,19 @@ setHeatMap(){
           this.map = L.map('map');
       }
       if( changes['tilesUrl'] && changes['tilesUrl'].previousValue != changes['tilesUrl'].currentValue ) {
-        // tilesUrl prop changed
-        console.log("url changed");
         this.setTileLayer();
-        this.setHeatMap();
-        console.log("url changed");
-        
       }
       if( changes['center'] && changes['center'].previousValue != changes['center'].currentValue ) {
         // tilesUrl prop changed
-        this.setTileLayer();
+        this.mapInit();
         
       }
+      if( changes['heatPoints'] && changes['heatPoints'].previousValue != changes['heatPoints'].currentValue ) {
+        // tilesUrl prop changed
+        this.setHeatMap();
+        
+      }
+
       if( changes['minZoom'] && changes['minZoom'].previousValue != changes['minZoom'].currentValue ) {
         // tilesUrl prop changed
         this.setTileLayer();
