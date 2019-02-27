@@ -170,7 +170,7 @@ addedMarkers:any[]=[];
 
  setMapData(){
    this.map.setView(this.center, this.zoom);
-   //console.log("map set again");
+   ////console.log("map set again");
    
    L.tileLayer(this.tilesUrl, {
          minZoom: this.minZoom, maxZoom: this.maxZoom,
@@ -251,6 +251,7 @@ ngOnChanges(changes: any) {
   if( changes['levelChangers'] && changes['levelChangers'].previousValue != changes['levelChangers'].currentValue ) {
     // existingRoutes prop changed
     //this.initMarkers();
+    //console.log("level changers");
     this.initLevelChangers();
 
   }
@@ -261,7 +262,7 @@ ngOnChanges(changes: any) {
     
  }
  // ngDoCheck() {
- //   //console.log("check called");
+ //   ////console.log("check called");
  // };
 
 
@@ -362,7 +363,7 @@ initRoutes(){
        }
 
       polyline.on('contextmenu', (e)=>{
-        ////console.log("right click");
+        //////console.log("right click");
         L.DomEvent.stopPropagation(e);
         var tdiv='Delete ?';
         var tpopup = L.popup({closeButton:true})
@@ -370,7 +371,7 @@ initRoutes(){
                     .setContent(tdiv)
                       .openOn(this.map);
         tpopup._wrapper.addEventListener('click', ()=>{
-           ////console.log("delete");
+           //////console.log("delete");
            this.onroutedeleted.emit(polyLineObj);
            this.map.removeLayer(polyline);
            this.map.removeLayer(arrowHead);
@@ -382,8 +383,8 @@ initRoutes(){
       polyline.on('click', (e)=>{
 
           if(this.splicing){
-          // //console.log(e.latlng);
-          // //console.log(polyline);
+          // ////console.log(e.latlng);
+          // ////console.log(polyline);
           /*
             Removing the current added polyline and adding new
           */
@@ -441,6 +442,8 @@ initRoutes(){
 
 initLevelChangers(){
   //this.removeAllMarkers();
+  //console.log("inside level")
+  //console.log(this.levelChangers);
   this.levelpolyLines.forEach(polyline=>{
     this.map.removeLayer(polyline);
   });
@@ -469,7 +472,7 @@ initLevelChangers(){
       
 
       polyline.on('contextmenu', (e)=>{
-        ////console.log("right click");
+        //////console.log("right click");
         L.DomEvent.stopPropagation(e);
         var tdiv='Delete ?';
         var tpopup = L.popup({closeButton:true})
@@ -477,7 +480,7 @@ initLevelChangers(){
                     .setContent(tdiv)
                       .openOn(this.map);
         tpopup._wrapper.addEventListener('click', ()=>{
-           ////console.log("delete");
+           //////console.log("delete");
            this.onlevelroutedeleted.emit(polyLineObj);
            this.map.removeLayer(polyline);
            this.map.removeLayer(arrowHead);
@@ -606,7 +609,7 @@ addMarkerAndDraw(e){
     //                 .setContent(tdiv)
     //                 .openOn(map_copy);
     //   tpopup._wrapper.addEventListener('click', ()=>{
-    //      ////console.log("delete");
+    //      //////console.log("delete");
     //      map_copy.removeLayer(marker);
     //     map_copy.closePopup();
     //   });
@@ -656,7 +659,7 @@ removeLastAdded(){
 
   if(marker){
     let _polylineIndex  = marker._polylineIndex;
-    //console.log(_polylineIndex);
+    ////console.log(_polylineIndex);
     if(!this.polyIndexMap[_polylineIndex] || this.polyIndexMap[_polylineIndex].length == 0){
       this.markers.splice(this.markers.length-1,1);
       if(marker){
@@ -758,7 +761,7 @@ addSingleMarker(markerObj){
         
     });
     marker.on('dragend', function(e){
-      //console.log("xxxx");
+      ////console.log("xxxx");
       // if(this.editing){
       //     return;
       // }
@@ -809,7 +812,7 @@ addSingleMarker(markerObj){
       let latlng = this.getLatLng();
       let key = latlng.lat+"-"+latlng.lng;
       tpopup._wrapper.addEventListener('click', ()=>{
-         ////console.log("delete");
+         //////console.log("delete");
          map_copy.removeLayer(marker);
         map_copy.closePopup();
         delete self.existingMarkersMap[key];
@@ -831,7 +834,7 @@ addSingleMarker(markerObj){
 
 changeRoutesData(marker){
   let polyObjs = this.routeMarkerMap[marker.marker_id];
-  ////console.log(polyObjs);
+  //////console.log(polyObjs);
   if(polyObjs){
     polyObjs.forEach(obj=>{
 
@@ -897,7 +900,7 @@ addSaved(){
 
        this.savedPolylines.push(polyLineObj);
        this.savedPolylines.push(reverseLineObj);
-       ////console.log(polylineObj);
+       //////console.log(polylineObj);
        this.onrouteadded.emit(polyLineObj);
        this.onrouteadded.emit(reverseLineObj);
        
@@ -953,7 +956,7 @@ redrawSaved(){
        }
 
       polyline.on('contextmenu', (e)=>{
-        ////console.log("right click");
+        //////console.log("right click");
         L.DomEvent.stopPropagation(e);
         var tdiv='Delete ?';
         var tpopup = L.popup({closeButton:true})
@@ -961,7 +964,7 @@ redrawSaved(){
                     .setContent(tdiv)
                       .openOn(this.map);
         tpopup._wrapper.addEventListener('click', ()=>{
-           ////console.log("delete");
+           //////console.log("delete");
            this.onroutedeleted.emit(polylineObj);
            this.map.removeLayer(polyline);
            this.map.removeLayer(arrowHead);
@@ -972,15 +975,15 @@ redrawSaved(){
       
       polyline.on('click', (e)=>{
         if(this.splicing){
-          // //console.log(e.latlng);
-          // //console.log(polyline);
+          // ////console.log(e.latlng);
+          // ////console.log(polyline);
           /*
             Removing the current added polyline and adding new
           */
           let frompolyObjs = this.routeMarkerMap[polylineObj['from_point_marker_id']];
           //let topolyObjs = this.routeMarkerMap[polylineObj['to_point_marker_id']];
           //let commonPolyLines = [];
-          //console.log(this.savedPolylines);
+          ////console.log(this.savedPolylines);
           frompolyObjs.forEach(left=>{
             if(left.line_id == polylineObj.line_id){
                   let index = this.savedPolylines.indexOf(left);
@@ -995,7 +998,7 @@ redrawSaved(){
               }
           })
           
-          //console.log(this.savedPolylines);
+          ////console.log(this.savedPolylines);
           this.map.removeLayer(polyline);
           //add marker
           this.addMarkerSplit(e.latlng);
@@ -1056,7 +1059,7 @@ addSavedSplit(latlng1,latlng2){
 
        this.savedPolylines.push(polyLineObj);
        this.savedPolylines.push(reverseLineObj);
-       ////console.log(polylineObj);
+       //////console.log(polylineObj);
        this.onrouteadded.emit(polyLineObj);
        this.onrouteadded.emit(reverseLineObj);
        
@@ -1089,12 +1092,12 @@ onSpliceLine(){
 
 redrawAll(){
   this.polyLines.forEach(polyline=>{
-    ////console.log(polyline.getLatLngs());
+    //////console.log(polyline.getLatLngs());
     polyline.addTo(this.map);
     polyline.redraw();
   })
   this.arrowPolyLines.forEach(polyline=>{
-    ////console.log(polyline.getLatLngs());
+    //////console.log(polyline.getLatLngs());
     polyline.addTo(this.map);
     polyline.redraw();
   })
@@ -1110,7 +1113,7 @@ angleFromCoordinate(lat1, long1, lat2,
             * Math.cos(lat2) * Math.cos(dLon);
 
     let brng = Math.atan2(y, x);
-    //console.log(brng);
+    ////console.log(brng);
     // brng = brng * 57.2958;
     // brng = (brng + 360) % 360;
     //brng = 360 - brng; // count degrees counter-clockwise - remove to make clockwise
