@@ -13,6 +13,8 @@ map:any;
 @Input()
 zoom:number=18;
 @Input()
+radius:number=25;
+@Input()
 minZoom:number=16;
 @Input()
 maxZoom:number=22;
@@ -46,8 +48,14 @@ heatPoints:any[] = [
 ]
 @Input()
 center:number[]= [19.167651, 72.853086];
+@Input()
+blur:number=2;
 
+@Input()
+gradient:any = {0.1: 'red', 0.4: 'yellow', 1: 'green'}
 
+@Output()
+lattopoints:EventEmitter<any>  = new EventEmitter<any>();
 
   constructor() { }
 
@@ -71,7 +79,24 @@ center:number[]= [19.167651, 72.853086];
 setHeatMap(){
 	// console.log("sss");
 	// L.heatLayer(this.heatPoints, {radius: 6}).addTo(this.map);
-  var heat = L.heatLayer(this.heatPoints, {radius: 25}).addTo(this.map);
+  var heat = L.heatLayer(this.heatPoints, {radius: this.radius, gradient: this.gradient, blur: this.blur, maxzoom:this.minZoom}).addTo(this.map);
+  this.convertHeatMapPoints()
+}
+
+convertHeatMapPoints(){
+  var points = []
+  if(this.heatPoints){
+    this.heatPoints.forEach(pointVal=>{
+      //console.log(pointVal);
+      var latlng = L.latLng(pointVal[0], pointVal[1]);
+      var point = this.map.project(latlng, this.map.zoom);
+      //console.log(point);
+      var x = point.x;
+      var y = point.y;
+      points.push([x, y]);
+    });
+  }
+  this.lattopoints.emit(points);
 }
 	
   

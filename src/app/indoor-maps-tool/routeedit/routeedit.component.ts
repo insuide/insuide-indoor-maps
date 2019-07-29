@@ -169,6 +169,9 @@ addedMarkers:any[]=[];
  }
 
  setMapData(){
+   this.map.eachLayer((layer)=>{
+    this.map.removeLayer(layer);
+  });
    this.map.setView(this.center, this.zoom);
    ////console.log("map set again");
    
