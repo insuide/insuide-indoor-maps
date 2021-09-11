@@ -368,11 +368,17 @@ initRoutes(){
       polyline.on('contextmenu', (e)=>{
         //////console.log("right click");
         L.DomEvent.stopPropagation(e);
-        var tdiv='Delete ?';
-        var tpopup = L.popup({closeButton:true})
+        
+        
+        const tdiv='<ul><li id="deleteLine">Delete ?</li><li id="isRestricted">isRestricted ?</li></ul>';
+
+
+
+        const tpopup = L.popup({closeButton:true})
                     .setLatLng(e.latlng)
                     .setContent(tdiv)
                       .openOn(this.map);
+
         tpopup._wrapper.addEventListener('click', ()=>{
            //////console.log("delete");
            this.onroutedeleted.emit(polyLineObj);
@@ -477,11 +483,16 @@ initLevelChangers(){
       polyline.on('contextmenu', (e)=>{
         //////console.log("right click");
         L.DomEvent.stopPropagation(e);
-        var tdiv='Delete ?';
-        var tpopup = L.popup({closeButton:true})
+        
+        const tdiv='<ul><li id="deleteLine">Delete ?</li><li id="isRestricted">isRestricted ?</li></ul>';
+
+
+
+        const tpopup = L.popup({closeButton:true})
                     .setLatLng(e.latlng)
                     .setContent(tdiv)
                       .openOn(this.map);
+
         tpopup._wrapper.addEventListener('click', ()=>{
            //////console.log("delete");
            this.onlevelroutedeleted.emit(polyLineObj);
@@ -961,11 +972,16 @@ redrawSaved(){
       polyline.on('contextmenu', (e)=>{
         //////console.log("right click");
         L.DomEvent.stopPropagation(e);
-        var tdiv='Delete ?';
-        var tpopup = L.popup({closeButton:true})
+       
+        const tdiv='<ul><li id="deleteLine">Delete ?</li><li id="isRestricted">isRestricted ?</li></ul>';
+
+
+
+        const tpopup = L.popup({closeButton:true})
                     .setLatLng(e.latlng)
                     .setContent(tdiv)
                       .openOn(this.map);
+
         tpopup._wrapper.addEventListener('click', ()=>{
            //////console.log("delete");
            this.onroutedeleted.emit(polylineObj);
